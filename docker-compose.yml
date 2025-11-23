@@ -1,0 +1,49 @@
+services:
+  # Base de données MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: appareils-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: appareilsDB
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - appareils-network
+
+  # Backend Node.js
+  backend:
+    build: .
+    container_name: appareils-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/appareilsDB
+      - PORT=3001
+    depends_on:
+      - mongodb
+    networks:
+      - appareils-network
+
+  # Frontend Angular
+  frontend:
+    build: ./appname
+    container_name: appareils-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - appareils-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  appareils-network:
+    driver: bridge
